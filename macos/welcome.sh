@@ -1,0 +1,3 @@
+Y
+clear
+cat ./welcome
