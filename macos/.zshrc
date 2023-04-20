@@ -1,12 +1,9 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+# if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+#   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+# fi
 
 # Path to your oh-my-zsh installation.
 export ZSH="/Users/drshtn/.oh-my-zsh"
@@ -79,19 +76,8 @@ export UPDATE_ZSH_DAYS=10
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git)
 
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
 # Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
+# if [[ -n $SSH_CONNECTION ]]; then export EDITOR='vim'; else export EDITOR='mvim'; fi
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
@@ -114,10 +100,23 @@ DEFAULT_USER=$(whoami)
 
 
 ### FUNCTIONS
-prompt_context() {
-  # if [[ "$USER" != "$DEFAULT_USER" || -n "$SSH_CLIENT" ]]; then
-  #   prompt_segment black default "%(!.%{%F{yellow}%}.)$USER"
-  # fi
+kinit_renew() { echo "Renewing Kinit"; kinit -f -l 10h -r 7d; }
+
+run_ssh_agent() {
+    if ps -p $SSH_AGENT_PID > /dev/null; then echo "ssh-agent is already running"
+    else eval `ssh-agent -s`; fi
+}
+
+mwinit_validate() {
+    SSH_CERT=~/.ssh/id_rsa-cert.pub
+    if (! test -f "$SSH_CERT") || (test "`find ~/.ssh/id_rsa-cert.pub -mmin +1220`"); then
+        echo "Midway expired. Please re-authenticate."
+        if mwinit -o ; then
+            run_ssh_agent
+            ssh-add -D ~/.ssh/*_rsa
+            ssh-add ~/.ssh/*_rsa
+        else echo "Failed to Authenticate."; fi
+    else echo "Midway Authenticated."; fi
 }
 
 
@@ -136,11 +135,6 @@ export PATH="/Applications/Fortify/Fortify_SCA_and_Apps_21.2.3/bin:$PATH"
 ### OTHERS
 JAVA_TOOLS_OPTIONS="-Dlog4j2.formatMsgNoLookups=true"
 
-
-### MANPAGERS KEEP ONLY ONE
-export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-# export MANPAGER="nvim -c 'set ft=man' -"
-
 fpath=(~/.zsh/completion $fpath)
 autoload -Uz compinit && compinit -i
 
@@ -149,20 +143,27 @@ autoload -Uz compinit && compinit -i
 alias ls='exa -l --color=always --group-directories-first'
 alias la='exa -al --color=always --group-directories-first'
 alias lt='exa -aT --color=always --group-directories-first'
-alias lgrep='ls | grep'
 alias grep='grep --color=auto'
+alias lsgrep='ls | grep'
+alias watch='watch -n 1'
 
 alias ..='cd ..'
 alias ...='cd ../..'
-alias ....='cd ../../..'
-alias .....='cd ../../../..'
-alias .1='cd ..'
-alias .2='cd ../..'
-alias .3='cd ../../..'
-alias .4='cd ../../../..'
+alias ..2='cd ../..'
+alias ..3='cd ../../..'
+alias ..4='cd ../../../..'
+alias ..5='cd ../../../../..'
 
 alias verify='~/verify.sh'
 alias clouddesktop='~/clouddesktop.sh'
+alias devdesktop='dev-dsk-drshtn01-1a-646a3cf6.eu-west-1.amazon.com'
+
+
+# WORKPLACE
+alias work='cd ~/workplace'
+alias tcms='cd ~/workplace/TCMS/src/TransCapacityManagementService'
+alias pam='cd ~/workplace/PAMCore/src/PassportAccessManagementCore'
+alias webserver='cd ~/workplace/PAMSelfServeWebServer/src/PAMSelfServeWebServer'
 
 
 ### GIT
@@ -178,7 +179,11 @@ alias gch='git checkout'
 alias gcho='git checkout --ours'
 alias gcht='git checkout --theirs'
 alias gst='git stash'
+alias gstp='git stash pop'
+alias gstc='git stash clear'
 alias grb='git rebase'
+alias grba='git rebase --abort'
+alias grbc='git rebase --continue'
 
 
 ### BRAZIL-BUILD
@@ -194,7 +199,7 @@ alias bbt='brazil-build test'
 alias bboot='brazil-bootstrap'
 alias bbcbb='brazil-build clean && brazil-build'
 alias bbcbbr='brazil-build clean && brazil-build release'
-alias bbrec='brazil-recursive-cmd --allPackages brazil-build release'
+alias bbrec='brazil-recursive-cmd brazil-build release --allPackages'
 alias bbsut='brazil-build single-unit-test'
 alias bbcbbg='brazil-build clean && brazil-build generate'
 alias bbpipeline='brazil-build bootstrap && brazil-build cdk bootstrap && brazil-build deploy:pipeline'
@@ -207,9 +212,11 @@ alias bwc='brazil ws create'
 alias bwu='brazil ws use'
 alias bwr='brazil ws remove'
 alias bwd='brazil ws delete'
-alias bws='brazil ws --sync --md'
+alias bws='brazil ws sync --md'
 alias bsp='brazil setup platform-support'
-
+alias bcc='brazil-package-cache clean'
+# brazil vs clone --from TransCapacityManagementService/development --to TransCapacityManagementService/development-drshtn-clone --overwrite
+# brazil vs removemajorversions --versionset TransCapacityManagementService/development --majorversion DeclarativeCoralMetricsCoralServiceBinding-2.1
 
 ### RDE
 alias rs='rde stack'
@@ -220,5 +227,41 @@ alias rwr='rde wflow run'
 alias rwrv='rde wflow run validate'
 
 
+### CR
+alias cr='cr --destination-branch mainline'
+alias crh='cr --destination-branch mainline --parent HEAD^'
+
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+
+### Kinit and MWinit auto-renewal
+# echo "Checking for Kinit Authentication"
+# if ! klist -s; then kinit_renew; else echo "Kinit Authenticated"; fi
+# echo "Checking for Midway Authentication"
+# mwinit_validate
+
+# ffmpeg -i *.mp4 -i *.srt -c copy -c:s mov_text movie.mp4
+
+### ADB
+# adb devices
+# adb shell
+# adb pull /sdcard/ ~/Temp
+# adb shell rm -rf /sdcard/folder
+
+
+### Transfer Docker image from one machine to another
+# 1. Save docker image as tar file : docker save -o <generated file name>.tar <repository_name:tag_name>
+#    this will save in current directory
+# 2. Transfer the generated tar file
+# 3. Load image in docker : docker load -i <path to image tar file>
+
+
+### SSH Key Generation
+# ssh-keygen -t ecdsa
+
+
+### Memory
+# RAM -> free -h
+# Disk -> df -H
