@@ -1,3 +1,3 @@
 Y
 clear
-cat ./welcome
+cat /Users/drshtn/OneDrive/Workspace/Scripts/welcome
