@@ -119,6 +119,11 @@ plugins=(git zsh-autosuggestions zsh-syntax-highlighting fast-syntax-highlightin
 ARCH_ICON=''
 
 
+export PATH=$PATH:$HOME/.toolbox/bin
+export PATH=$PATH:/apollo/env/OdinTools/bin:/apollo/env/EDXClient/bin:/apollo/env/NodeJS/bin:/apollo/env/envImprovement/bin:
+export PATH=$PATH:/home/drshtn/.local/bin
+
+
 ### THEME
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
@@ -140,8 +145,8 @@ ssh() {
     /usr/bin/ssh -2 $*;
     set-title $HOST;
 }
-kinitr() { 
-  kinit -f -l 10h -r 7d; 
+kinitr() {
+  kinit -f -l 10h -r 7d;
 }
 if ! klist -s; then kinitr; fi;
 
@@ -159,56 +164,66 @@ alias ..3='cd ../../..'
 alias ..4='cd ../../../..'
 alias ..5='cd ../../../../..'
 
-### Brazil-Build
 
-
-alias bb=brazil-build
-
-alias bba='brazil-build apollo-pkg'
-alias bre='brazil-runtime-exec'
-alias brc='brazil-recursive-cmd'
-alias bw='brazil ws'
-alias bwsuse='bw use --gitMode -p'
-alias bwscreate='bw create -n'
-alias bbr='brc brazil-build'
-alias bball='brc --allPackages'
-alias bbb='brc --allPackages brazil-build'
-alias bbra='bbr apollo-pkg'
-
-alias bwc='brazil ws create'
-alias bwd='brazil ws delete'
-alias bwu='brazil ws use'
-alias bwr='brazil ws remove'
-alias bws='brazil ws --sync --md'
-
-alias bbc='brazil-build clean'
-alias bbr='brazil-build release'
-alias bbg='brazil-build generate'
-alias bbs='brazil-build server'
-alias bbt='brazil-build test'
-alias bbsut='brazil-build single-unit-test'
-
-alias bbcbb='bbc && bb'
-alias bbcbbr='bbc && bbr'
-alias bbcbbg='bbc && bbg'
-alias bbrec='brazil-recursive-cmd --allPackages brazil-build'
-alias bbrec_hard='bw clean && bbrec'
-alias bbreq='cd ../TransCapacityManagementServiceModel && bbcbbr && cd ../TransCapacityManagementDataAccess && bbcbbr && cd ../TransCapacityManagementServiceJavaClient && bbcbbr && cd ../TransCapacityManagementService && bbcbbr'
-alias bboot='brazil-bootstrap'
-alias bbpipeline='brazil-build bootstrap && brazil-build cdk bootstrap && brazil-build deploy:pipeline'
-alias bbi='brazil-build app install'
-alias bbw='brazil-build wrapper'
-
- ### GIT
+### GIT
 alias ga='git add'
 alias gb='git branch'
-alias gs='git status'
 alias gc='git commit'
-alias gr='git restore --staged'
-alias gp='git pull -r'
-alias gl='git log'
 alias gch='git checkout'
+alias gcp='git cherry-pick'
+alias gcpa='git cherry-pick --abort'
+alias gcpc='git cherry-pick --continue'
+alias gd='git diff'
+alias gdn='git diff --name-only'
+alias gds='git diff --staged'
+alias gdsn='git diff --staged --name-only'
+alias gl='git log'
+alias gr='git restore --staged'
+alias grb='git rebase'
+alias grba='git rebase --abort'
+alias grbc='git rebase --continue'
+alias gs='git status'
 alias gst='git stash'
+alias gstc='echo git stash clear' # Just to be on safe side
+alias gstp='git stash pop'
+alias gtree="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset%n' --abbrev-commit --date=relative --branches"
+
+
+### BRAZIL-BUILD
+alias bb='brazil-build'
+alias bbb='brazil-build bootstrap'
+alias bbc='brazil-build clean'
+alias bbg='brazil-build generate'
+alias bbi='brazil-build app install'
+alias bbr='brazil-build release'
+alias bbs='brazil-build server'
+alias bbt='brazil-build test'
+alias bbw='brazil-build wrapper'
+alias bbcbb='brazil-build clean && brazil-build'
+alias bbcbbr='brazil-build clean && brazil-build release'
+alias bbcbbg='brazil-build clean && brazil-build generate'
+alias bbrec='brazil-recursive-cmd brazil-build release --allPackages'
+alias bbsut='brazil-build single-unit-test'
+alias bbpipeline='brazil-build bootstrap && brazil-build cdk bootstrap && brazil-build deploy:pipeline'
+alias bbinteg='AWS_REGION=us-east-1 Stage=beta brazil-build integTest'
+
+
+### BRAZIL
+alias bw='brazil ws'
+alias bwc='brazil ws create'
+alias bwu='brazil ws use'
+alias bwr='brazil ws remove'
+alias bwd='brazil ws delete'
+alias bws='brazil ws sync --md'
+alias bsp='brazil setup platform-support'
+alias bcc='brazil-package-cache clean'
+alias bboot='brazil-bootstrap'
+# brazil vs clone --from TransCapacityManagementService/development --to TransCapacityManagementService/development-drshtn-clone --overwrite // To clone/override a vs from a target vs
+# brazil vs removemajorversions -vs CERPService/development // Remove all unused packages from given vs
+# brazil vs removemajorversions -vs TransCapacityManagementService/development --majorversion DeclarativeCoralMetricsCoralServiceBinding-2.1 // To remove only a package from vs
+# brazil vs printdependencies -vs CERPService/development -p TransCLCClauseLambdaModel-1.0 // To find out packages used by target package
+# brazil vs printdependencies -vs CERPService/development -consumers -p TransCLCClauseLambdaModel-1.0 // To find out all packages which use the target package
+
 
 ### RDE
 alias rw='rde wflow'
@@ -217,31 +232,34 @@ alias rwrv='rwr validate'
 alias rs='rde stack'
 alias rec='rde env clean'1
 alias rwrl='rde wflow run && docker exec $1 sh -c "tail -f /apollo/env/$1/var/output/logs/application.log.*" | grep -v -e MetricAggregationClientScheduled-1 -e MetricAggregationClientPublisher-1 -e CloudAuthTokenAuthorizer | grep -e "\[INFO\]" -e "\[ERROR\]" -e Error -e error -e "at " -e CausedBy'
-
-### USE WITH CAUTION
+#### USE WITH CAUTION
 alias rde_reboot='rec && rwr && rwrv'
 alias rde_reboot_hard='rec && bbrec_hard && rwr && rwrv'
+
+
+### CR
+alias cr='cr --destination-branch mainline'
+alias crh='cr --destination-branch mainline --parent HEAD^'
+
+
+## Docker
+export DOCKER_HOST=unix:///Users/$USER/.docker/run/docker.sock
+alias dockerImagesRemove='docker rmi -f $(docker images -q)'
+
 
 ### ADA
 # alias adaCred='ada credentials update --provider conduit --role IibsAdminAccess-DO-NOT-DELETE --once --account'  ### Created bash script for this
 
 
 ### Docker
-alias dockerImagesRemove='docker rmi -f $(docker images -q)'
+alias dockerDelete='docker rmi -f $(docker images -q)'
 
 
-export PATH=$HOME/.toolbox/bin:$PATH
-export PATH=$PATH:/apollo/env/OdinTools/bin
-
-export NPM_HOME=/apollo/env/NodeJS
-export PATH=$NPM_HOME/bin:$PATH
-export PATH=$PATH:/apollo/env/EDXClient/bin:/apollo/env/NodeJS/bin:/home/drshtn/.toolbox/bin:/usr/local/bin:/usr/bin:/home/drshtn/bin:/usr/local/sbin:/usr/sbin
-export PATH=$PATH:/apollo/env/envImprovement/bin
-export PATH=$PATH:/home/drshtn/.local/bin
+# Gordian Knot
+# gk-analyze-all, gk-analyze-guidance, gk-analyze-inconsistencies, gk-analyze-package, gk-analyze-version-set, gk-explain, gk-fix-mv-conflicts, gk-graph
 
 
 # if you wish to use IMDS set AWS_EC2_METADATA_DISABLED=false
-
 export AWS_EC2_METADATA_DISABLED=true
 
 
@@ -249,8 +267,38 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# To customize prompt, run `p10k configure` or edit /local/home/drshtn/.p10k.zsh.
-[[ ! -f /local/home/drshtn/.p10k.zsh ]] || source /local/home/drshtn/.p10k.zsh
+
+### Kinit and MWinit auto-renewal
+kinit_renew() {
+    echo "Renewing Kinit"; kinit -f -l 10h -r 7d;
+}
+run_ssh_agent() {
+    if ps -p $SSH_AGENT_PID > /dev/null; then echo "ssh-agent is already running"
+    else eval `ssh-agent -s`; fi
+}
+mwinit_validate() {
+    SSH_CERT=~/.ssh/id_rsa-cert.pub
+    if (! test -f "$SSH_CERT") || (test "`find ~/.ssh/id_rsa-cert.pub -mmin +1220`"); then
+        echo "Midway expired. Please re-authenticate."
+        if mwinit -o ; then
+            run_ssh_agent
+            ssh-add -D ~/.ssh/*_rsa
+            ssh-add ~/.ssh/*_rsa
+        else echo "Failed to Authenticate."; fi
+    else echo "Midway Authenticated."; fi
+}
+auto_renew_kinit_mwinit() {
+    echo "Checking for Kinit Authentication"
+    if ! klist -s; then kinit_renew; else echo "Kinit Authenticated"; fi
+    echo "Checking for Midway Authentication"
+    mwinit_validate
+}
+auto_renew_kinit_mwinit
+
+
+### SSH Key Generation
+# ssh-keygen -t ecdsa
