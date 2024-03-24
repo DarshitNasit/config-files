@@ -243,16 +243,13 @@ alias crh='cr --destination-branch mainline --parent HEAD^'
 
 
 ## Docker
-export DOCKER_HOST=unix:///Users/$USER/.docker/run/docker.sock
+# export DOCKER_HOST=unix:///Users/$USER/.docker/run/docker.sock
 alias dockerImagesRemove='docker rmi -f $(docker images -q)'
+alias dockerImagesSize='docker images --format "{{.Size}}" | awk '\''{print (substr($1, 1, length($1)-2)+0) * (($1~/GB/)?1024:1)}'\'' | awk '\''{total+=$1} END {print "Total memory used by docker images: " total/1024 " GB"}'\'''
 
 
 ### ADA
 # alias adaCred='ada credentials update --provider conduit --role IibsAdminAccess-DO-NOT-DELETE --once --account'  ### Created bash script for this
-
-
-### Docker
-alias dockerDelete='docker rmi -f $(docker images -q)'
 
 
 # Gordian Knot
@@ -274,10 +271,10 @@ export NVM_DIR="$HOME/.nvm"
 
 ### Kinit and MWinit auto-renewal
 kinit_renew() {
-    echo "Renewing Kinit"; kinit -f -l 10h -r 7d;
+    echo "Renewing Kinit."; kinit -f -l 10h -r 7d;
 }
 run_ssh_agent() {
-    if ps -p $SSH_AGENT_PID > /dev/null; then echo "ssh-agent is already running"
+    if ps -p $SSH_AGENT_PID > /dev/null; then echo "ssh-agent is already running."
     else eval `ssh-agent -s`; fi
 }
 mwinit_validate() {
@@ -292,10 +289,11 @@ mwinit_validate() {
     else echo "Midway Authenticated."; fi
 }
 auto_renew_kinit_mwinit() {
-    echo "Checking for Kinit Authentication"
-    if ! klist -s; then kinit_renew; else echo "Kinit Authenticated"; fi
-    echo "Checking for Midway Authentication"
+    echo "Checking for Kinit Authentication."
+    if ! klist -s; then kinit_renew; else echo "Kinit Authenticated."; fi
+    echo "Checking for Midway Authentication."
     mwinit_validate
+    echo ""
 }
 auto_renew_kinit_mwinit
 
