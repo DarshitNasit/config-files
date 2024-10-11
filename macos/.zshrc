@@ -1,6 +1,13 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
 # if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
 #   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 # fi
@@ -128,6 +135,7 @@ export PATH="/Applications/Fortify/Fortify_SCA_and_Apps_21.2.3/bin:$PATH"
 JAVA_TOOLS_OPTIONS="-Dlog4j2.formatMsgNoLookups=true"
 fpath=(~/.zsh/completion $fpath)
 autoload -Uz compinit && compinit -i
+export LANG="en_US.UTF-8"
 
 
 ### Dev Desktop
@@ -165,6 +173,7 @@ alias gcp='git cherry-pick'
 alias gcpa='git cherry-pick --abort'
 alias gcpc='git cherry-pick --continue'
 alias gd='git diff'
+alias gdc='git diff --cached'
 alias gdn='git diff --name-only'
 alias gds='git diff --staged'
 alias gdsn='git diff --staged --name-only'
@@ -206,7 +215,7 @@ alias bwu='brazil ws use'
 alias bwr='brazil ws remove'
 alias bwd='brazil ws delete'
 alias bws='brazil ws sync --md'
-alias bsp='brazil setup platform-support'
+alias bsetup='brazil setup platform-support'
 alias bcc='brazil-package-cache clean'
 alias bboot='brazil-bootstrap'
 # brazil vs clone --from TransCapacityManagementService/development --to TransCapacityManagementService/development-drshtn-clone --overwrite // To clone/override a vs from a target vs
@@ -242,10 +251,13 @@ alias dockerImagesRemove='docker rmi -f $(docker images -q)'
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# Oh my posh
+# eval "$(oh-my-posh init zsh --config $(brew --prefix oh-my-posh)/themes/jandedobbeleer.omp.json)"
+
 
 ### Kinit and MWinit auto-renewal
 kinit_renew() {
-    echo "Renewing Kinit"; kinit -f -l 10h -r 7d; 
+    echo "Renewing Kinit"; kinit -f -l 10h -r 7d;
 }
 run_ssh_agent() {
     if ps -p $SSH_AGENT_PID > /dev/null; then echo "ssh-agent is already running"
