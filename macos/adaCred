@@ -1,0 +1,105 @@
+#!/bin/bash
+
+if [ "$1" = "insact-beta" ]; then
+    account_id=164319751494
+    echo "Getting credentials for Insact Beta with account id: $account_id"
+elif [ "$1" = "insact-gamma" ]; then
+    account_id=098084051420
+    echo "Getting credentials for Insact Gamma with account id: $account_id"
+elif [ "$1" = "insact-prod" ]; then
+    account_id=912507783504
+    echo "Getting credentials for Insact Prod with account id: $account_id"
+
+elif [ "$1" = "dashboard-beta" ]; then
+    account_id=442423270501
+    echo "Getting credentials for Dashboard Beta with account id: $account_id"
+elif [ "$1" = "dashboard-gamma" ]; then
+    account_id=293299333245
+    echo "Getting credentials for Dashboard Gamma with account id: $account_id"
+elif [ "$1" = "dashboard-prod" ]; then
+    account_id=730798138635
+    echo "Getting credentials for Dashboard Prod with account id: $account_id"
+
+elif [ "$1" = "clc-beta" ]; then
+    account_id=650181813431
+    echo "Getting credentials for CLC Beta with account id: $account_id"
+elif [ "$1" = "clc-gamma" ]; then
+    account_id=756954171968
+    echo "Getting credentials for CLC Gamma with account id: $account_id"
+elif [ "$1" = "clc-prod" ]; then
+    account_id=227738782535
+    echo "Getting credentials for CLC Prod with account id: $account_id"
+
+elif [ "$1" = "capacity-beta" ]; then
+    account_id=203789285483
+    echo "Getting credentials for Capacity Beta with account id: $account_id"
+elif [ "$1" = "capacity-gamma" ]; then
+    account_id=068565196274
+    echo "Getting credentials for Capacity Gamma with account id: $account_id"
+elif [ "$1" = "capacity-prod" ]; then
+    account_id=408180736068
+    echo "Getting credentials for Capacity Prod with account id: $account_id"
+
+elif [ "$1" = "npc-beta" ]; then
+    account_id=738348950361
+    echo "Getting credentials for NPC Beta with account id: $account_id"
+elif [ "$1" = "npc-gamma" ]; then
+    account_id=674504993863
+    echo "Getting credentials for NPC Gamma with account id: $account_id"
+elif [ "$1" = "npc-prod" ]; then
+    account_id=736317896269
+    echo "Getting credentials for NPC Prod with account id: $account_id"
+
+elif [ "$1" = "upp-beta" ]; then
+    account_id=919640890052
+    echo "Getting credentials for UPP Beta with account id: $account_id"
+elif [ "$1" = "upp-gamma" ]; then
+    account_id=281593806946
+    echo "Getting credentials for UPP Gamma with account id: $account_id"
+elif [ "$1" = "upp-prod" ]; then
+    account_id=088311740789
+    echo "Getting credentials for UPP Prod with account id: $account_id"
+
+elif [ "$1" = "forecast-beta" ]; then
+    account_id=941715798132
+    echo "Getting credentials for Forecast Beta with account id: $account_id"
+elif [ "$1" = "forecast-gamma" ]; then
+    account_id=186759831603
+    echo "Getting credentials for Forecast Gamma with account id: $account_id"
+elif [ "$1" = "forecast-prod" ]; then
+    account_id=962923964993
+    echo "Getting credentials for Forecast Prod with account id: $account_id"
+
+elif [ "$1" = "forecast-webserver-beta" ]; then
+    account_id=059109972863
+    echo "Getting credentials for Forecast Web Server Beta with account id: $account_id"
+elif [ "$1" = "forecast-webserver-gamma" ]; then
+    account_id=174315775566
+    echo "Getting credentials for Forecast Web Server Gamma with account id: $account_id"
+elif [ "$1" = "forecast-webserver-prod" ]; then
+    account_id=809667822692
+    echo "Getting credentials for Forecast Web Server Prod with account id: $account_id"
+
+elif [ "$1" = "tcfa-beta" ]; then
+     account_id=275112856352
+     echo "Getting credentials for TCFA Beta with account id: $account_id"
+elif [ "$1" = "tcfa-gamma" ]; then
+    account_id=784457119537
+    echo "Getting credentials for TCFA Gamma with account id: $account_id"
+elif [ "$1" = "tcfa-prod" ]; then
+    account_id=617154156281
+    echo "Getting credentials for TCFA Prod with account id: $account_id"
+
+elif [ "$1" = "tlps-beta" ]; then
+     account_id=590183787060
+     echo "Getting credentials for TLPS Beta with account id: $account_id"
+elif [ "$1" = "tlps-gamma" ]; then
+    account_id=905418244609
+    echo "Getting credentials for TLPS Gamma with account id: $account_id"
+elif [ "$1" = "tlps-prod" ]; then
+    account_id=905418187175
+    echo "Getting credentials for TLPS Prod with account id: $account_id"
+
+fi
+
+ada credentials update --provider conduit --role IibsAdminAccess-DO-NOT-DELETE --once --account "$account_id"
