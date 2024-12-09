@@ -1,0 +1,16 @@
+OPERATION=$1
+SOURCE_PORT=$2
+DESTINATION_PORT=$3
+
+# -M 0: Disables monitoring port, as some people may not want this feature.
+# -f: Puts autossh in the background after authentication.
+# -N: Prevents execution of remote commands, useful for just port forwarding.
+# -L 1234:localhost:5678: This forwards traffic from local port 1234 to port 5678 on the remote host.
+# user@remote-host: The remote SSH host where you are forwarding traffic.
+# -R remote_port:local_host:local_port Forward a remote port to a local port (Remote Port Forwarding).
+if [[ "$OPERATION" = "start" ]]; then
+    echo "Starting autossh $SOURCE_PORT:localhost:$DESTINATION_PORT to $DEV_DESKTOP_ALIAS"
+    autossh -M 0 -f -N -L "$SOURCE_PORT":localhost:"$DESTINATION_PORT" "$DEV_DESKTOP_ALIAS"
+else
+    pkill autossh
+fi
