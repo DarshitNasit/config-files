@@ -1,0 +1,3 @@
+#!/bin/bash
+# kinit -R || kinit -f -l 10h -r 7d
+mwinit -f -s
