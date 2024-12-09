@@ -5,13 +5,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-# if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-#   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-# fi
-
 # Installation process for powerlevel10k
 # 1. Install zsh
 # 2. Install oh-my-zsh: https://github.com/ohmyzsh/ohmyzsh -> sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -93,7 +86,7 @@ export UPDATE_ZSH_DAYS=10
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions fast-syntax-highlighting) # zsh-syntax-highlighting) # fast-syntax-highlighting)
+plugins=(git zsh-autosuggestions fast-syntax-highlighting zsh-syntax-highlighting)
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then export EDITOR='vim'; else export EDITOR='mvim'; fi
@@ -139,8 +132,10 @@ export LANG="en_US.UTF-8"
 
 
 ### Dev Desktop
-alias DEV_DESKTOP='dev-dsk-drshtn01-1a-646a3cf6.eu-west-1.amazon.com'
-alias dd='ssh dev-dsk-drshtn01-1a-646a3cf6.eu-west-1.amazon.com'
+# First: alias DEV_DESKTOP='dev-dsk-drshtn01-1a-646a3cf6.eu-west-1.amazon.com'
+export DEV_DESKTOP='dev-dsk-drshtn01-1a-05d94002.eu-west-1.amazon.com'
+export DEV_DESKTOP_ALIAS='drshtn-desktop.aka.corp.amazon.com'
+alias dd='ssh $DEV_DESKTOP'
 
 
 ### Stats
@@ -202,10 +197,13 @@ alias bbw='brazil-build wrapper'
 alias bbcbb='brazil-build clean && brazil-build'
 alias bbcbbr='brazil-build clean && brazil-build release'
 alias bbcbbg='brazil-build clean && brazil-build generate'
-alias bbrec='brazil-recursive-cmd brazil-build release --allPackages'
+alias bbrec='brazil-recursive-cmd brazil-build --allPackages'
+alias bbrecr='brazil-recursive-cmd brazil-build release --allPackages'
 alias bbsut='brazil-build single-unit-test'
 alias bbpipeline='brazil-build bootstrap && brazil-build cdk bootstrap && brazil-build deploy:pipeline'
 alias bbinteg='AWS_REGION=us-east-1 Stage=beta brazil-build integTest'
+alias cdkDeploy='brazil-build cdk deploy'
+alias cdkDeployX='brazil-build cdk deploy --exclusively'
 
 
 ### BRAZIL
@@ -303,3 +301,10 @@ auto_renew_kinit_mwinit() {
 
 ### SSH Key Generation
 # ssh-keygen -t ecdsa
+
+
+### Auto SSH
+#### Dependens on custom sshAuto script
+alias ssh8080='sshAuto start 8080 8080'
+alias ssh8443='sshAuto start 8443 8443'
+alias sshStop='sshAuto stop'
