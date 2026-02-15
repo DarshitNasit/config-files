@@ -1,0 +1,236 @@
+#!/bin/bash
+
+set -e
+
+# Usage function
+usage() {
+    echo "Usage: $0 -p <package-name> -o <output-folder> -b <s3-bucket> -k <s3-key-prefix> -l <lambda-config> [-l <lambda-config>...] [-r <region>]"
+    echo ""
+    echo "Options:"
+    echo "  -p    Package name (e.g., ServiceProviderPayoutOrchestrator)"
+    echo "  -o    Output folder for zip file"
+    echo "  -b    S3 bucket name for uploading zip"
+    echo "  -k    S3 key prefix (e.g., lambda-code/)"
+    echo "  -l    Lambda configuration in format: function-name[:publish][:alias]"
+    echo "        - function-name: Required. The Lambda function name"
+    echo "        - publish: Optional. Use 'publish' to publish a new version"
+    echo "        - alias: Optional. Alias name to update (requires publish)"
+    echo "        Can specify multiple -l options for multiple lambdas"
+    echo "  -r    AWS region (optional, defaults to us-east-1)"
+    echo ""
+    echo "Examples:"
+    echo "  # Single lambda, no versioning"
+    echo "  $0 -p MyPackage -o /tmp -b my-bucket -k lambda/ -l my-function"
+    echo ""
+    echo "  # Single lambda with version publishing"
+    echo "  $0 -p MyPackage -o /tmp -b my-bucket -k lambda/ -l my-function:publish"
+    echo ""
+    echo "  # Single lambda with version and alias"
+    echo "  $0 -p MyPackage -o /tmp -b my-bucket -k lambda/ -l my-function:publish:live"
+    echo ""
+    echo "  # Multiple lambdas with different configurations"
+    echo "  $0 -p MyPackage -o /tmp -b my-bucket -k lambda/ \\"
+    echo "     -l function1 \\"
+    echo "     -l function2:publish \\"
+    echo "     -l function3:publish:beta"
+    exit 1
+}
+
+# Default values
+REGION="us-east-1"
+LAMBDA_CONFIGS=()
+
+# Parse arguments
+while getopts "p:o:b:k:l:r:h" opt; do
+    case $opt in
+        p) PACKAGE_NAME="$OPTARG" ;;
+        o) OUTPUT_FOLDER="$OPTARG" ;;
+        b) S3_BUCKET="$OPTARG" ;;
+        k) S3_KEY_PREFIX="$OPTARG" ;;
+        l) LAMBDA_CONFIGS+=("$OPTARG") ;;
+        r) REGION="$OPTARG" ;;
+        h) usage ;;
+        *) usage ;;
+    esac
+done
+
+# Validate required arguments
+if [ -z "$PACKAGE_NAME" ] || [ -z "$OUTPUT_FOLDER" ] || [ -z "$S3_BUCKET" ] || [ -z "$S3_KEY_PREFIX" ] || [ ${#LAMBDA_CONFIGS[@]} -eq 0 ]; then
+    echo "Error: Missing required arguments"
+    usage
+fi
+
+echo "=== Lambda Deployment Script ==="
+echo "Package: $PACKAGE_NAME"
+echo "Output Folder: $OUTPUT_FOLDER"
+echo "S3 Bucket: $S3_BUCKET"
+echo "S3 Key Prefix: $S3_KEY_PREFIX"
+echo "Region: $REGION"
+echo "Lambda configurations: ${#LAMBDA_CONFIGS[@]}"
+echo ""
+
+# Parse and display lambda configurations
+declare -a FUNCTION_NAMES
+declare -a PUBLISH_FLAGS
+declare -a ALIASES
+
+for i in "${!LAMBDA_CONFIGS[@]}"; do
+    config="${LAMBDA_CONFIGS[$i]}"
+    
+    # Parse config: function-name[:publish][:alias]
+    IFS=':' read -ra parts <<< "$config"
+    
+    func_name="${parts[0]}"
+    publish_flag=""
+    alias_name=""
+    
+    if [ -z "$func_name" ]; then
+        echo "Error: Invalid lambda config '$config' - function name is required"
+        exit 1
+    fi
+    
+    # Check for publish and alias
+    for j in "${!parts[@]}"; do
+        if [ $j -eq 0 ]; then
+            continue
+        fi
+        part="${parts[$j]}"
+        if [ "$part" = "publish" ]; then
+            publish_flag="true"
+        elif [ -n "$part" ]; then
+            alias_name="$part"
+        fi
+    done
+    
+    # Alias requires publish
+    if [ -n "$alias_name" ] && [ -z "$publish_flag" ]; then
+        echo "Error: Lambda '$func_name' has alias '$alias_name' but publish is not enabled"
+        echo "       Use format: $func_name:publish:$alias_name"
+        exit 1
+    fi
+    
+    FUNCTION_NAMES+=("$func_name")
+    PUBLISH_FLAGS+=("$publish_flag")
+    ALIASES+=("$alias_name")
+    
+    echo "  Lambda $((i+1)): $func_name"
+    echo "    - Publish version: ${publish_flag:-false}"
+    echo "    - Alias: ${alias_name:-none}"
+done
+echo ""
+
+# Create a timestamp reference file before BATS transform
+TIMESTAMP_FILE="/tmp/.bats_timestamp_$$"
+touch "$TIMESTAMP_FILE"
+
+# Step 1: Run BATS transform
+echo ">>> Running BATS transform..."
+bats transform -t "${PACKAGE_NAME}-1.0" -p "${PACKAGE_NAME}-1.0" -x AWSLambda-1.0 -o "$OUTPUT_FOLDER"
+
+# Find the zip file created after the timestamp
+ZIP_FILE=$(find "$OUTPUT_FOLDER" -name "*.zip" -newer "$TIMESTAMP_FILE" -type f 2>/dev/null | head -1)
+
+# Cleanup timestamp file
+rm -f "$TIMESTAMP_FILE"
+
+# Fallback: find the most recently modified zip file
+if [ -z "$ZIP_FILE" ]; then
+    ZIP_FILE=$(ls -t "$OUTPUT_FOLDER"/*.zip 2>/dev/null | head -1)
+fi
+
+if [ -z "$ZIP_FILE" ] || [ ! -f "$ZIP_FILE" ]; then
+    echo "Error: BATS transform failed - no zip file found in $OUTPUT_FOLDER"
+    exit 1
+fi
+
+echo ">>> BATS transform completed: $ZIP_FILE"
+echo ""
+
+# Step 2: Upload zip to S3
+ZIP_FILENAME=$(basename "$ZIP_FILE")
+S3_KEY="${S3_KEY_PREFIX}${ZIP_FILENAME}"
+
+echo ">>> Uploading to S3: s3://$S3_BUCKET/$S3_KEY"
+aws s3 cp "$ZIP_FILE" "s3://$S3_BUCKET/$S3_KEY" --region "$REGION"
+echo ""
+
+# Step 3: Update each Lambda function
+# Disable AWS CLI pager to prevent interactive prompts
+export AWS_PAGER=""
+
+DEPLOYMENT_RESULTS=()
+
+for i in "${!FUNCTION_NAMES[@]}"; do
+    func_name="${FUNCTION_NAMES[$i]}"
+    publish_flag="${PUBLISH_FLAGS[$i]}"
+    alias_name="${ALIASES[$i]}"
+    
+    echo ">>> Processing Lambda: $func_name"
+    
+    # Build update command
+    if [ -n "$publish_flag" ]; then
+        echo "    Updating code and publishing new version..."
+        UPDATE_RESULT=$(aws lambda update-function-code \
+            --function-name "$func_name" \
+            --s3-bucket "$S3_BUCKET" \
+            --s3-key "$S3_KEY" \
+            --publish \
+            --region "$REGION" \
+            --no-cli-pager)
+        
+        NEW_VERSION=$(echo "$UPDATE_RESULT" | grep -o '"Version": "[^"]*"' | cut -d'"' -f4)
+        echo "    Published new version: $NEW_VERSION"
+        
+        # Update alias if provided
+        if [ -n "$alias_name" ]; then
+            # Get the current version the alias points to before updating
+            OLD_VERSION=$(aws lambda get-alias \
+                --function-name "$func_name" \
+                --name "$alias_name" \
+                --region "$REGION" \
+                --query 'FunctionVersion' \
+                --output text 2>/dev/null || echo "")
+            
+            echo "    Updating alias '$alias_name' to point to version $NEW_VERSION..."
+            aws lambda update-alias \
+                --function-name "$func_name" \
+                --name "$alias_name" \
+                --function-version "$NEW_VERSION" \
+                --region "$REGION" \
+                --no-cli-pager
+            
+            # Delete the old version if it exists and is different from the new version
+            if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$NEW_VERSION" ] && [ "$OLD_VERSION" != "\$LATEST" ]; then
+                echo "    Deleting old version: $OLD_VERSION..."
+                aws lambda delete-function \
+                    --function-name "$func_name" \
+                    --qualifier "$OLD_VERSION" \
+                    --region "$REGION" \
+                    --no-cli-pager 2>/dev/null && echo "    Old version $OLD_VERSION deleted" || echo "    Could not delete old version $OLD_VERSION (may be in use by another alias)"
+            fi
+            
+            DEPLOYMENT_RESULTS+=("$func_name: version $NEW_VERSION, alias '$alias_name' updated")
+        else
+            DEPLOYMENT_RESULTS+=("$func_name: version $NEW_VERSION published")
+        fi
+    else
+        echo "    Updating code (no version publishing)..."
+        aws lambda update-function-code \
+            --function-name "$func_name" \
+            --s3-bucket "$S3_BUCKET" \
+            --s3-key "$S3_KEY" \
+            --region "$REGION" \
+            --no-cli-pager > /dev/null
+        
+        DEPLOYMENT_RESULTS+=("$func_name: code updated (\$LATEST)")
+    fi
+    
+    echo ""
+done
+
+echo "=== Deployment completed successfully ==="
+echo ""
+echo "Summary:"
+for result in "${DEPLOYMENT_RESULTS[@]}"; do
+    echo "  - $result"
+done
