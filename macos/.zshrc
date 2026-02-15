@@ -1,3 +1,7 @@
+
+# Kiro CLI pre block. Keep at the top of this file.
+# [[ -f "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.pre.zsh" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.pre.zsh"
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -119,9 +123,10 @@ source $ZSH/oh-my-zsh.sh
 
 
 ### PATH
-JAVA_HOME="$(/usr/libexec/java_home)"
+export JAVA_HOME="$(/usr/libexec/java_home)"
 export PATH=$HOME/.toolbox/bin:$JAVA_HOME:$PATH
 export PATH="/Applications/Fortify/Fortify_SCA_and_Apps_21.2.3/bin:$PATH"
+export PATH="/usr/local/drshtn/bin:$PATH"
 
 
 ### OTHERS
@@ -132,16 +137,14 @@ export LANG="en_US.UTF-8"
 
 
 ### Dev Desktop
-# First: alias DEV_DESKTOP='dev-dsk-drshtn01-1a-646a3cf6.eu-west-1.amazon.com'
 export DEV_DESKTOP='dev-dsk-drshtn01-1a-05d94002.eu-west-1.amazon.com'
 export DEV_DESKTOP_ALIAS='drshtn-desktop.aka.corp.amazon.com'
 alias dd='ssh $DEV_DESKTOP'
 
 
 ### Stats
-alias ls='exa -l --color=always --group-directories-first'
-alias la='exa -al --color=always --group-directories-first'
-alias lt='exa -aT --color=always --group-directories-first'
+alias ls='lsd -l'
+alias la='lsd -al'
 alias grep='grep --color=auto'
 alias lsgrep='ls | grep'
 alias watch='watch -n 1'
@@ -164,6 +167,8 @@ alias ga='git add'
 alias gb='git branch'
 alias gc='git commit'
 alias gch='git checkout'
+alias gcho='git checkout --ours'
+alias gcht='git checkout --theirs'
 alias gcp='git cherry-pick'
 alias gcpa='git cherry-pick --abort'
 alias gcpc='git cherry-pick --continue'
@@ -173,6 +178,8 @@ alias gdn='git diff --name-only'
 alias gds='git diff --staged'
 alias gdsn='git diff --staged --name-only'
 alias gl='git log'
+alias gp='git pull -r'
+alias gpu='git push'
 alias gr='git restore --staged'
 alias grb='git rebase'
 alias grba='git rebase --abort'
@@ -182,6 +189,7 @@ alias gst='git stash'
 alias gstc='echo git stash clear' # Just to be on safe side
 alias gstp='git stash pop'
 alias gtree="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset%n' --abbrev-commit --date=relative --branches"
+# To delete/deprecate remote branch => git push -d origin <branch1> <branch2> <branch3> ...
 
 
 ### BRAZIL-BUILD
@@ -204,6 +212,7 @@ alias bbpipeline='brazil-build bootstrap && brazil-build cdk bootstrap && brazil
 alias bbinteg='AWS_REGION=us-east-1 Stage=beta brazil-build integTest'
 alias cdkDeploy='brazil-build cdk deploy'
 alias cdkDeployX='brazil-build cdk deploy --exclusively'
+bbtc() { bbt --tests="$1" coverageReportSummary; } # Works only for Gradle
 
 
 ### BRAZIL
@@ -212,9 +221,11 @@ alias bwc='brazil ws create'
 alias bwu='brazil ws use'
 alias bwr='brazil ws remove'
 alias bwd='brazil ws delete'
-alias bws='brazil ws sync --md'
+alias bws='brazil ws --sync --md'
 alias bsetup='brazil setup platform-support'
-alias bcc='brazil-package-cache clean'
+alias bpc='brazil-package-cache'
+alias bpcr='brazil-package-cache stop && brazil-package-cache start'
+alias bpcc='brazil-package-cache clean'
 alias bboot='brazil-bootstrap'
 # brazil vs clone --from TransCapacityManagementService/development --to TransCapacityManagementService/development-drshtn-clone --overwrite // To clone/override a vs from a target vs
 # brazil vs removemajorversions -vs CERPService/development // Remove all unused packages from given vs
@@ -222,6 +233,13 @@ alias bboot='brazil-bootstrap'
 # brazil vs printdependencies -vs CERPService/development -p TransCLCClauseLambdaModel-1.0 // To find out packages used by target package
 # brazil vs printdependencies -vs CERPService/development -consumers -p TransCLCClauseLambdaModel-1.0 // To find out all packages which use the target package
 
+
+### HYDRA
+alias ht='hydra clone --run' # Usage: hydra clone --run --pipeline PassportReviewService --stage "Beta" --approval-step "Hydra Test"
+hydraTest() { hydra clone --run --pipeline $1 --stage $2 --approval-step $3 }  ## Usage: hydraTest PassportReviewService Beta 'Hydra Test'
+
+### PYTHON
+alias p3='python3'
 
 ### RDE
 alias rs='rde stack'
@@ -308,3 +326,31 @@ auto_renew_kinit_mwinit() {
 alias ssh8080='sshAuto start 8080 8080'
 alias ssh8443='sshAuto start 8443 8443'
 alias sshStop='sshAuto stop'
+
+source /Users/drshtn/.brazil_completion/zsh_completion
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+
+# Set up mise for runtime management
+eval "$(mise activate zsh)"
+eval "$(rbenv init -)"
+
+
+# Ruby
+eval "$(rbenv init - zsh)"
+
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+
+# Enable autocompletion for mechanic.
+# [ -f "$HOME/.local/share/mechanic/complete.zsh" ] && source "$HOME/.local/share/mechanic/complete.zsh"
+
+# [[ "$TERM_PROGRAM" == "kiro" ]] && . "$(kiro --locate-shell-integration-path zsh)"
+
+
+# Kiro CLI post block. Keep at the bottom of this file.
+# [[ -f "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh"
+
