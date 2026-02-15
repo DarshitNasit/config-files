@@ -100,6 +100,40 @@ elif [ "$1" = "tlps-prod" ]; then
     account_id=905418187175
     echo "Getting credentials for TLPS Prod with account id: $account_id"
 
+elif [ "$1" = "travis-beta" ]; then
+     account_id=362383511401
+     echo "Getting credentials for Travis Beta with account id: $account_id"
+elif [ "$1" = "travis-gamma" ]; then
+    account_id=424253462932
+    echo "Getting credentials for Travis Gamma with account id: $account_id"
+elif [ "$1" = "travis-prod" ]; then
+    account_id=465441244299
+    echo "Getting credentials for Travis Prod with account id: $account_id"
+
+elif [ "$1" = "parse-beta" ]; then
+     account_id=996788847010
+     echo "Getting credentials for Parse Beta with account id: $account_id"
+elif [ "$1" = "parse-gamma" ]; then
+    account_id=479139133666
+    echo "Getting credentials for Parse Gamma with account id: $account_id"
+elif [ "$1" = "parse-prod" ]; then
+    account_id=378122160682
+    echo "Getting credentials for Parse Prod with account id: $account_id"
+
+elif [ "$1" = "spyro-beta" ]; then
+    account_id=535961769103
+    echo "Getting credentials for Spyro Beta with account id: $account_id"
+elif [ "$1" = "spyro-gamma" ]; then
+    account_id=021025004586
+    echo "Getting credentials for Spyro Gamma with account id: $account_id"
+elif [ "$1" = "spyro-prod" ]; then
+    account_id=836686978899
+    echo "Getting credentials for Spyro Prod with account id: $account_id"
+
+else
+    account_id=$1
+    echo "Getting credentials for $1 account"
 fi
 
 ada credentials update --provider conduit --role IibsAdminAccess-DO-NOT-DELETE --once --account "$account_id"
+
